@@ -93,6 +93,10 @@ public class Column {
         this.property = buildPropertyName();
     }
 
+    public void setProperty(String property) {
+        this.property = property;
+    }
+
     public String getProperty() {
         return property;
     }
@@ -106,28 +110,31 @@ public class Column {
     }
 
     public String getPropertySimpleType() {
+        String propertyType = this.propertyType;
         if (columnConfig.getPropertyType() != null) {
-            String genericName = null;
-            String baseType = columnConfig.getPropertyType();
-            if (columnConfig.getPropertyType().contains("<") && columnConfig.getPropertyType().endsWith(">")) {
-                String genericType = StringUtil.substringBetween(columnConfig.getPropertyType(), "<", ">");
-                if (genericType != null && !genericType.isEmpty()) {
-                    genericName = StringUtil.substringAfterLast(genericType, ".");
-                    baseType = StringUtil.substringBeforeLast(columnConfig.getPropertyType(), "<");
-                }
-            }
+            propertyType = columnConfig.getPropertyType();
+        }
 
-            if (!baseType.contains(".")) {
-                return baseType;
+        String genericName = null;
+        String baseType = propertyType;
+        if (propertyType.contains("<") && propertyType.endsWith(">")) {
+            String genericType = StringUtil.substringBetween(propertyType, "<", ">");
+            if (genericType != null && !genericType.isEmpty()) {
+                genericName = StringUtil.substringAfterLast(genericType, ".");
+                baseType = StringUtil.substringBeforeLast(propertyType, "<");
             }
-            String baseName = StringUtil.substringAfterLast(baseType, ".");
-            if (genericName != null && !genericName.isEmpty()) {
-                return String.format("%s<%s>", baseName, genericName);
-            } else {
-                return baseName;
-            }
+        }
+
+        System.out.println("baseType = " + baseType + ", genericName = " + genericName);
+
+        if (!baseType.contains(".")) {
+            return baseType;
+        }
+        String baseName = StringUtil.substringAfterLast(baseType, ".");
+        if (genericName != null && !genericName.isEmpty()) {
+            return String.format("%s<%s>", baseName, genericName);
         } else {
-            return StringUtil.substringAfterLast(propertyType, ".");
+            return baseName;
         }
     }
 
@@ -229,14 +236,16 @@ public class Column {
         importClass = importClass.trim();
 
         // java.util.List<String> >>>>> java.util.List
+        System.out.println("importClass = " + importClass);
         if (importClass.contains("<") && importClass.endsWith(">")) {
-            importClass = importClass.substring(0, importClass.indexOf("<"));
-
             // java.util.List<java.time.LocalDateTime> >>>>> java.time.LocalDateTime
             String genericType = StringUtil.substringBetween(importClass, "<", ">");
-            if (genericType != null && !genericType.trim().isEmpty() && importClass.contains(".")) {
-                addImportClass(importClasses, genericType);
+            if (genericType != null && !genericType.isEmpty() && importClass.contains(".")
+                    && !importClass.startsWith("java.lang.")) {
+                importClasses.add(genericType);
             }
+
+            importClass = importClass.substring(0, importClass.indexOf("<"));
         }
 
         // 不包含“.”则认为是原始类型，不需要import
