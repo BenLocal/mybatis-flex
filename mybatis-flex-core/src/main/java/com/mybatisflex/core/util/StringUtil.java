@@ -15,7 +15,6 @@
  */
 package com.mybatisflex.core.util;
 
-
 import com.mybatisflex.core.exception.FlexExceptions;
 
 import java.util.Collection;
@@ -37,14 +36,14 @@ public class StringUtil {
         } else if (name.startsWith("get") || name.startsWith("set")) {
             name = name.substring(3);
         } else {
-            throw FlexExceptions.wrap("Error parsing property name '%s'.  Didn't start with 'is', 'get' or 'set'.", name);
+            throw FlexExceptions.wrap("Error parsing property name '%s'.  Didn't start with 'is', 'get' or 'set'.",
+                    name);
         }
         if (!name.isEmpty()) {
             name = name.substring(0, 1).toLowerCase(Locale.ENGLISH).concat(name.substring(1));
         }
         return name;
     }
-
 
     /**
      * 第一个字符转换为小写
@@ -61,7 +60,6 @@ public class StringUtil {
         return string;
     }
 
-
     /**
      * 第一个字符转换为大写
      *
@@ -76,7 +74,6 @@ public class StringUtil {
         }
         return string;
     }
-
 
     /**
      * 驼峰转下划线格式
@@ -129,7 +126,6 @@ public class StringUtil {
         return sb.toString();
     }
 
-
     /**
      * 删除字符串中的字符
      */
@@ -170,11 +166,9 @@ public class StringUtil {
         return false;
     }
 
-
     public static boolean hasText(String string) {
         return string != null && !string.isEmpty() && containsText(string);
     }
-
 
     public static boolean allHasText(String... strings) {
         for (String string : strings) {
@@ -192,7 +186,6 @@ public class StringUtil {
         return !hasText(string);
     }
 
-
     /**
      * 这个字符串是否是全是数字
      *
@@ -203,7 +196,7 @@ public class StringUtil {
         if (noText(string)) {
             return false;
         }
-        for (int i = string.length(); --i >= 0; ) {
+        for (int i = string.length(); --i >= 0;) {
             int chr = string.charAt(i);
             if (chr < 48 || chr > 57) {
                 return false;
@@ -211,7 +204,6 @@ public class StringUtil {
         }
         return true;
     }
-
 
     public static boolean startsWithAny(String string, String... prefixes) {
         if (noText(string) || prefixes == null) {
@@ -226,7 +218,6 @@ public class StringUtil {
         return false;
     }
 
-
     public static boolean endsWithAny(String str, String... suffixes) {
         if (noText(str) || suffixes == null) {
             return false;
@@ -239,7 +230,6 @@ public class StringUtil {
         }
         return false;
     }
-
 
     /**
      * 正则匹配
@@ -291,7 +281,6 @@ public class StringUtil {
         }
     }
 
-
     /**
      * 合并字符串，优化 String.join() 方法
      *
@@ -322,14 +311,15 @@ public class StringUtil {
 
     public static String[] getSchemaAndTableName(String tableNameWithSchema) {
         int index = tableNameWithSchema.indexOf(".");
-        return index <= 0 ? new String[]{null, tableNameWithSchema.trim()}
-            : new String[]{tableNameWithSchema.substring(0, index).trim(), tableNameWithSchema.substring(index + 1).trim()};
+        return index <= 0 ? new String[] { null, tableNameWithSchema.trim() }
+                : new String[] { tableNameWithSchema.substring(0, index).trim(),
+                        tableNameWithSchema.substring(index + 1).trim() };
     }
 
     public static String[] getTableNameWithAlias(String tableNameWithAlias) {
         int index = tableNameWithAlias.indexOf(".");
-        return index <= 0 ? new String[]{tableNameWithAlias, null}
-            : new String[]{tableNameWithAlias.substring(0, index), tableNameWithAlias.substring(index + 1)};
+        return index <= 0 ? new String[] { tableNameWithAlias, null }
+                : new String[] { tableNameWithAlias.substring(0, index), tableNameWithAlias.substring(index + 1) };
     }
 
     public static String tryTrim(String string) {
@@ -346,5 +336,33 @@ public class StringUtil {
         return text.substring(text.lastIndexOf(prefix) + 1);
     }
 
+    public static String substringBeforeLast(String text, String suffix) {
+        if (text == null) {
+            return null;
+        }
+        if (suffix == null) {
+            return text;
+        }
+        int pos = text.lastIndexOf(suffix);
+        return pos == -1 ? text : text.substring(0, pos);
+    }
+
+    public static String substringBetween(String str, String open, String close) {
+        if (str == null || open == null || close == null) {
+            return null;
+        }
+
+        int start = str.indexOf(open);
+        if (start == -1) {
+            return null;
+        }
+
+        int end = str.indexOf(close, start + open.length());
+        if (end == -1) {
+            return null;
+        }
+
+        return str.substring(start + open.length(), end);
+    }
 
 }

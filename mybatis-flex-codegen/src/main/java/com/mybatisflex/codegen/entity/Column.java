@@ -107,10 +107,25 @@ public class Column {
 
     public String getPropertySimpleType() {
         if (columnConfig.getPropertyType() != null) {
-            if (!columnConfig.getPropertyType().contains(".")) {
-                return columnConfig.getPropertyType();
+            String genericName = null;
+            String baseType = columnConfig.getPropertyType();
+            if (columnConfig.getPropertyType().contains("<") && columnConfig.getPropertyType().endsWith(">")) {
+                String genericType = StringUtil.substringBetween(columnConfig.getPropertyType(), "<", ">");
+                if (genericType != null && !genericType.isEmpty()) {
+                    genericName = StringUtil.substringAfterLast(genericType, ".");
+                    baseType = StringUtil.substringBeforeLast(columnConfig.getPropertyType(), "<");
+                }
             }
-            return StringUtil.substringAfterLast(columnConfig.getPropertyType(), ".");
+
+            if (!baseType.contains(".")) {
+                return baseType;
+            }
+            String baseName = StringUtil.substringAfterLast(baseType, ".");
+            if (genericName != null && !genericName.isEmpty()) {
+                return String.format("%s<%s>", baseName, genericName);
+            } else {
+                return baseName;
+            }
         } else {
             return StringUtil.substringAfterLast(propertyType, ".");
         }
@@ -197,8 +212,8 @@ public class Column {
             return "";
         } else {
             return "/**\n" +
-                "     * " + comment + "\n" +
-                "     */";
+                    "     * " + comment + "\n" +
+                    "     */";
         }
     }
 
@@ -216,6 +231,12 @@ public class Column {
         // java.util.List<String> >>>>> java.util.List
         if (importClass.contains("<") && importClass.endsWith(">")) {
             importClass = importClass.substring(0, importClass.indexOf("<"));
+
+            // java.util.List<java.time.LocalDateTime> >>>>> java.time.LocalDateTime
+            String genericType = StringUtil.substringBetween(importClass, "<", ">");
+            if (genericType != null && !genericType.trim().isEmpty() && importClass.contains(".")) {
+                addImportClass(importClasses, genericType);
+            }
         }
 
         // 不包含“.”则认为是原始类型，不需要import
@@ -234,7 +255,7 @@ public class Column {
     public String buildAnnotations() {
         StringBuilder annotations = new StringBuilder();
 
-        //@Id 的注解
+        // @Id 的注解
         if (isPrimaryKey || columnConfig.isPrimaryKey()) {
             annotations.append("@Id(");
 
@@ -259,14 +280,13 @@ public class Column {
                 needComma = true;
             }
 
-
             if (entityConfig != null && entityConfig.isColumnCommentEnable() && StringUtil.hasText(comment)) {
                 addComma(annotations, needComma);
                 annotations.append("comment = \"")
-                    .append(this.comment.replace("\n", "")
-                        .replace("\"", "\\\"")
-                        .trim())
-                    .append("\"");
+                        .append(this.comment.replace("\n", "")
+                                .replace("\"", "\\\"")
+                                .trim())
+                        .append("\"");
             }
 
             if (annotations.length() == 4) {
@@ -281,25 +301,25 @@ public class Column {
         }
 
         boolean needGenColumnAnnotation = (entityConfig != null && entityConfig.isAlwaysGenColumnAnnotation())
-            || !name.equalsIgnoreCase(StringUtil.camelToUnderline(property))
-            || (entityConfig != null && entityConfig.isColumnCommentEnable() && StringUtil.hasText(this.comment) && annotations.length() == 0);
+                || !name.equalsIgnoreCase(StringUtil.camelToUnderline(property))
+                || (entityConfig != null && entityConfig.isColumnCommentEnable() && StringUtil.hasText(this.comment)
+                        && annotations.length() == 0);
 
         StringBuilder columnAnnotation = new StringBuilder("@Column(");
 
-        //@Column 注解
+        // @Column 注解
         if (columnConfig.getOnInsertValue() != null
-            || columnConfig.getOnUpdateValue() != null
-            || columnConfig.getLarge() != null
-            || columnConfig.getLogicDelete() != null
-            || columnConfig.getVersion() != null
-            || columnConfig.getJdbcType() != null
-            || columnConfig.getTypeHandler() != null
-            || columnConfig.getTenantId() != null
-            || needGenColumnAnnotation
-        ) {
+                || columnConfig.getOnUpdateValue() != null
+                || columnConfig.getLarge() != null
+                || columnConfig.getLogicDelete() != null
+                || columnConfig.getVersion() != null
+                || columnConfig.getJdbcType() != null
+                || columnConfig.getTypeHandler() != null
+                || columnConfig.getTenantId() != null
+                || needGenColumnAnnotation) {
             boolean needComma = false;
             if (entityConfig != null && entityConfig.isAlwaysGenColumnAnnotation()
-                || !name.equalsIgnoreCase(StringUtil.camelToUnderline(property))) {
+                    || !name.equalsIgnoreCase(StringUtil.camelToUnderline(property))) {
                 columnAnnotation.append("value = \"").append(name).append("\"");
                 needComma = true;
             }
@@ -336,7 +356,8 @@ public class Column {
             }
             if (columnConfig.getTypeHandler() != null) {
                 addComma(columnAnnotation, needComma);
-                columnAnnotation.append("typeHandler = ").append(columnConfig.getTypeHandler().getSimpleName()).append(".class");
+                columnAnnotation.append("typeHandler = ").append(columnConfig.getTypeHandler().getSimpleName())
+                        .append(".class");
                 needComma = true;
             }
             if (Boolean.TRUE.equals(columnConfig.getTenantId())) {
@@ -347,10 +368,10 @@ public class Column {
             if (entityConfig != null && entityConfig.isColumnCommentEnable() && StringUtil.hasText(comment)) {
                 addComma(columnAnnotation, needComma);
                 columnAnnotation.append("comment = \"")
-                    .append(this.comment.replace("\n", "")
-                        .replace("\"", "\\\"")
-                        .trim())
-                    .append("\"");
+                        .append(this.comment.replace("\n", "")
+                                .replace("\"", "\\\"")
+                                .trim())
+                        .append("\"");
             }
             columnAnnotation.append(")");
 
@@ -418,19 +439,19 @@ public class Column {
             }
 
             boolean needGenColumnAnnotation = (entityConfig != null && entityConfig.isAlwaysGenColumnAnnotation())
-                || !name.equalsIgnoreCase(StringUtil.camelToUnderline(property))
-                || (entityConfig != null && entityConfig.isColumnCommentEnable() && StringUtil.hasText(this.comment));
+                    || !name.equalsIgnoreCase(StringUtil.camelToUnderline(property))
+                    || (entityConfig != null && entityConfig.isColumnCommentEnable()
+                            && StringUtil.hasText(this.comment));
 
             if (columnConfig.getOnInsertValue() != null
-                || columnConfig.getOnUpdateValue() != null
-                || columnConfig.getLarge() != null
-                || columnConfig.getLogicDelete() != null
-                || columnConfig.getVersion() != null
-                || columnConfig.getJdbcType() != null
-                || columnConfig.getTypeHandler() != null
-                || Boolean.TRUE.equals(columnConfig.getTenantId())
-                || needGenColumnAnnotation
-            ) {
+                    || columnConfig.getOnUpdateValue() != null
+                    || columnConfig.getLarge() != null
+                    || columnConfig.getLogicDelete() != null
+                    || columnConfig.getVersion() != null
+                    || columnConfig.getJdbcType() != null
+                    || columnConfig.getTypeHandler() != null
+                    || Boolean.TRUE.equals(columnConfig.getTenantId())
+                    || needGenColumnAnnotation) {
                 addImportClass(importClasses, com.mybatisflex.annotation.Column.class.getName());
             }
         }
@@ -450,11 +471,11 @@ public class Column {
     @Override
     public String toString() {
         return "Column{" +
-            "name='" + name + '\'' +
-            ", className='" + propertyType + '\'' +
-            ", remarks='" + comment + '\'' +
-            ", isAutoIncrement=" + isAutoIncrement +
-            '}';
+                "name='" + name + '\'' +
+                ", className='" + propertyType + '\'' +
+                ", remarks='" + comment + '\'' +
+                ", isAutoIncrement=" + isAutoIncrement +
+                '}';
     }
 
 }
