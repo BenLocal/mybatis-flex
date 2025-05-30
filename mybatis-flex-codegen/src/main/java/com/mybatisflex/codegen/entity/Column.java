@@ -93,6 +93,10 @@ public class Column {
         this.property = buildPropertyName();
     }
 
+    public void setProperty(String property) {
+        this.property = property;
+    }
+
     public String getProperty() {
         return property;
     }
@@ -110,10 +114,56 @@ public class Column {
             if (!columnConfig.getPropertyType().contains(".")) {
                 return columnConfig.getPropertyType();
             }
-            return StringUtil.substringAfterLast(columnConfig.getPropertyType(), ".");
+            return convertToSimpleGenericType(columnConfig.getPropertyType());
         } else {
-            return StringUtil.substringAfterLast(propertyType, ".");
+            return convertToSimpleGenericType(propertyType);
         }
+    }
+
+    private String convertToSimpleGenericType(String fullType) {
+        if (fullType == null || fullType.isEmpty()) {
+            return fullType;
+        }
+
+        // 如果不包含泛型，直接处理
+        if (!fullType.contains("<") && !fullType.endsWith(">")) {
+            return StringUtil.substringAfterLast(fullType, ".");
+        }
+
+        StringBuilder result = new StringBuilder();
+        int i = 0;
+
+        while (i < fullType.length()) {
+            char c = fullType.charAt(i);
+
+            if (c == '<' || c == ',' || c == '>') {
+                result.append(c);
+                if (c == ',' || c == '<') {
+                    // 跳过空格
+                    while (i + 1 < fullType.length() && fullType.charAt(i + 1) == ' ') {
+                        i++;
+                        result.append(' ');
+                    }
+                }
+                i++;
+            } else {
+                // 提取类型名称
+                int start = i;
+                while (i < fullType.length() && fullType.charAt(i) != '<' &&
+                        fullType.charAt(i) != ',' && fullType.charAt(i) != '>') {
+                    i++;
+                }
+
+                String typeName = fullType.substring(start, i).trim();
+                if (!typeName.isEmpty()) {
+                    // 转换为简单类名
+                    String simpleType = StringUtil.substringAfterLast(typeName, ".");
+                    result.append(simpleType);
+                }
+            }
+        }
+
+        return result.toString();
     }
 
     public void setPropertyType(String propertyType) {
@@ -213,15 +263,41 @@ public class Column {
     private static void addImportClass(Set<String> importClasses, String importClass) {
         importClass = importClass.trim();
 
-        // java.util.List<String> >>>>> java.util.List
-        if (importClass.contains("<") && importClass.endsWith(">")) {
-            importClass = importClass.substring(0, importClass.indexOf("<"));
+        extractAllTypes(importClasses, importClass);
+    }
+
+    private static void extractAllTypes(Set<String> importClasses, String typeString) {
+        if (typeString == null || typeString.isEmpty()) {
+            return;
         }
 
-        // 不包含“.”则认为是原始类型，不需要import
-        // lang 包不需要显式导入
-        if (importClass.contains(".") && !importClass.startsWith("java.lang.")) {
-            importClasses.add(importClass);
+        int i = 0;
+        while (i < typeString.length()) {
+            // 跳过非字母字符
+            while (i < typeString.length() && !Character.isLetter(typeString.charAt(i))
+                    && typeString.charAt(i) != '_') {
+                i++;
+            }
+
+            if (i >= typeString.length()) {
+                break;
+            }
+
+            // 提取类名
+            int start = i;
+            while (i < typeString.length() &&
+                    (Character.isLetterOrDigit(typeString.charAt(i)) ||
+                            typeString.charAt(i) == '_' ||
+                            typeString.charAt(i) == '.')) {
+                i++;
+            }
+
+            String className = typeString.substring(start, i);
+
+            // 检查是否包含包路径且不是java.lang包
+            if (className.contains(".") && !className.startsWith("java.lang.")) {
+                importClasses.add(className);
+            }
         }
     }
 

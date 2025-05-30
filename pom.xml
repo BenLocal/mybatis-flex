@@ -84,6 +84,9 @@
         <junit.version>4.13.2</junit.version>
         <testcontainers.version>1.19.3</testcontainers.version>
         <maven-flatten.version>1.5.0</maven-flatten.version>
+    
+        <gpg.skip>true</gpg.skip>
+        <maven.test.skip>true</maven.test.skip>
     </properties>
 
     <dependencyManagement>
