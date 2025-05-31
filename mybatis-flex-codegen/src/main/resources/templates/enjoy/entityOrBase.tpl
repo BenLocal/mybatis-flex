@@ -91,7 +91,9 @@ public class #(entityClassName)#if(withActiveRecord) extends Model<#(entityClass
     #set(comment = javadocConfig.formatColumnComment(column.comment))
     #if(hasText(comment))
     /**
-     * #(comment)
+    #for(line : javadocConfig.getCommentLines(column.comment))
+     * #(line)
+    #end
      */
     #end
     #set(annotations = column.buildAnnotations())
@@ -115,6 +117,18 @@ public class #(entityClassName)#if(withActiveRecord) extends Model<#(entityClass
 
     #end
     #for(column: table.columns)
+    /**
+     * Getter method for #(column.property)
+     *
+     * <pre>
+    #for(line : javadocConfig.getCommentLines(column.comment))
+     * #(line)
+    #end
+     * </pre>
+     * 
+     * @return the #(column.property)
+     *
+     */
     public #(column.propertySimpleType) #(column.getterMethod())() {
         return #(column.property);
     }
@@ -125,6 +139,18 @@ public class #(entityClassName)#if(withActiveRecord) extends Model<#(entityClass
         return this;
     }
     #else
+    /**
+     * Setter method for #(column.property)
+     *
+     * <pre>
+    #for(line : javadocConfig.getCommentLines(column.comment))
+     * #(line)
+    #end
+     * </pre>
+     * 
+     * @param #(column.property) the #(column.property) to set
+     *
+     */
     public void #(column.setterMethod())(#(column.propertySimpleType) #(column.property)) {
         this.#(column.property) = #(column.property);
     }

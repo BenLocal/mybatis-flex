@@ -21,9 +21,12 @@ import com.mybatisflex.core.util.StringUtil;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 /**
  * 注释配置类。
@@ -259,4 +262,13 @@ public class JavadocConfig implements Serializable {
         return this;
     }
 
+    public List<String> getCommentLines(String comment) {
+        if (StringUtil.noText(comment)) {
+            return Arrays.asList();
+        }
+        String[] lines = comment.split("\n");
+        return Arrays.asList(lines).stream()
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
 }
