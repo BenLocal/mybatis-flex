@@ -91,9 +91,12 @@ public class #(entityClassName)#if(withActiveRecord) extends Model<#(entityClass
     #set(comment = javadocConfig.formatColumnComment(column.comment))
     #if(hasText(comment))
     /**
+     * 
+     * <pre>
     #for(line : javadocConfig.getCommentLines(column.comment))
      * #(line)
     #end
+     * </pre>
      */
     #end
     #set(annotations = column.buildAnnotations())
