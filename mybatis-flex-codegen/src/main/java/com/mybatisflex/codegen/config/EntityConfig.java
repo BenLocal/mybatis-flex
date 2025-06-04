@@ -15,11 +15,11 @@
  */
 package com.mybatisflex.codegen.config;
 
-import com.mybatisflex.codegen.entity.Table;
-
 import java.io.Serializable;
 import java.lang.reflect.TypeVariable;
 import java.util.function.Function;
+
+import com.mybatisflex.codegen.entity.Table;
 
 /**
  * 生成 Entity 的配置。
@@ -52,7 +52,6 @@ public class EntityConfig implements Serializable {
      */
     private Class<?> superClass;
 
-
     private Function<Table, Class<?>> superClassFactory;
 
     /**
@@ -68,7 +67,7 @@ public class EntityConfig implements Serializable {
     /**
      * Entity 默认实现的接口。
      */
-    private Class<?>[] implInterfaces = {Serializable.class};
+    private Class<?>[] implInterfaces = { Serializable.class };
 
     /**
      * Entity 是否使用 Lombok 注解。
@@ -113,7 +112,8 @@ public class EntityConfig implements Serializable {
     /**
      * 当开启这个配置后，Entity 会生成两个类，比如 Account 表会生成 Account.java 以及 AccountBase.java
      * 这样的好处是，自动生成的 getter setter 字段等都在 Base 类里，而开发者可以在 Account.java 中添加自己的业务代码
-     * 此时，当有数据库表结构发生变化，需要再次生成代码时，不会覆盖掉 Account.java 中的业务代码（只会覆盖 AccountBase 中的 Getter Setter）
+     * 此时，当有数据库表结构发生变化，需要再次生成代码时，不会覆盖掉 Account.java 中的业务代码（只会覆盖 AccountBase 中的
+     * Getter Setter）
      */
     private boolean withBaseClassEnable = false;
 
@@ -141,6 +141,34 @@ public class EntityConfig implements Serializable {
      * 继承的父类是否添加泛型
      */
     private boolean superClassGenericity = false;
+
+    /**
+     * 是否支持 nullable 注解
+     */
+    private boolean nullableAnnotation = false;
+
+    /**
+     * getter 方法返回值是否使用 Optional
+     */
+    private boolean getterMethodReturnOptional = false;
+
+    public boolean isNullableAnnotation() {
+        return nullableAnnotation;
+    }
+
+    public EntityConfig setNullableAnnotation(boolean nullableAnnotation) {
+        this.nullableAnnotation = nullableAnnotation;
+        return this;
+    }
+
+    public boolean isGetterMethodReturnOptional() {
+        return getterMethodReturnOptional;
+    }
+
+    public EntityConfig setGetterMethodReturnOptional(boolean getterMethodReturnOptional) {
+        this.getterMethodReturnOptional = getterMethodReturnOptional;
+        return this;
+    }
 
     public String getSourceDir() {
         return sourceDir;
@@ -197,20 +225,19 @@ public class EntityConfig implements Serializable {
         return this;
     }
 
-    private boolean hasGenericity(Class<?> clazz){
-        if (clazz == null){
+    private boolean hasGenericity(Class<?> clazz) {
+        if (clazz == null) {
             return false;
         }
         TypeVariable<? extends Class<?>>[] typeParameters = clazz.getTypeParameters();
         if (typeParameters.length > 1) {
             throw new UnsupportedOperationException("暂不支持父类泛型数量 >1 的代码生成");
-        }else if (typeParameters.length > 0 ){
+        } else if (typeParameters.length > 0) {
             return true;
-        }else {
+        } else {
             return false;
         }
     }
-
 
     public Class<?> getSuperClass(Table table) {
         if (superClassFactory != null) {
@@ -441,7 +468,7 @@ public class EntityConfig implements Serializable {
     }
 
     public boolean isSuperClassGenericity(Table table) {
-        if (this.superClassFactory != null){
+        if (this.superClassFactory != null) {
             return hasGenericity(superClassFactory.apply(table));
         }
         return superClassGenericity;

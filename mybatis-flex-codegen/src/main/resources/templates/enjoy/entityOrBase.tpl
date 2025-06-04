@@ -109,6 +109,9 @@ public class #(entityClassName)#if(withActiveRecord) extends Model<#(entityClass
     #if(withSwagger && swaggerVersion.getName() == "DOC")
     @Schema(description = "#(column.comment)")
     #end
+    #if(column.nullableAnnotation())
+    @Nullable
+    #end
     private #(column.propertySimpleType) #(column.property)#if(hasText(column.propertyDefaultValue)) = #(column.propertyDefaultValue)#end;
 
 #end
@@ -132,9 +135,30 @@ public class #(entityClassName)#if(withActiveRecord) extends Model<#(entityClass
      * @return the #(column.property)
      *
      */
+    #if(column.nullableAnnotation())
+    @Nullable
+    #end
     public #(column.propertySimpleType) #(column.getterMethod())() {
         return #(column.property);
     }
+    #if(column.getterMethodReturnOptional())
+
+    /**
+     * Getter method for #(column.property) with Optional return type.
+     *
+     * <pre>
+    #for(line : javadocConfig.getCommentLines(column.comment))
+     * #(line)
+    #end
+     * </pre>
+     * 
+     * @return the #(column.property)
+     *
+     */
+    public #(column.propertySimpleTypeWithOptional) #(column.getterMethod())Optional() {
+        return Optional.ofNullable(#(column.property));
+    }
+    #end
 
     #if(withActiveRecord)
     public #(entityClassName) #(column.setterMethod())(#(column.propertySimpleType) #(column.property)) {
